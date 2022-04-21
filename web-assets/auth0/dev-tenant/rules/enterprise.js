@@ -50,7 +50,32 @@ function (user, context, callback) {
                 "&formAction=" + registrationCompletetUrl +
                 "&returnUrl=" + retUrl;
 
+            const topgearBlockMessage = "Topgear can be accessed only by Wipro Employees. If you are a Wipro employee and not able to access, drop an email to ask.topgear@wipro.com with the error message";
+            const topgearBaseUrl = configuration.TOPGEAR_BASE_URL;
+            const topgearApiToken = configuration.TOPGEAR_CONTRACTOR_API_TOKEN;
             console.log("provider", provider, email);
+            // block wipro contractor
+            try {
+                request.get({
+                    url: topgearBaseUrl + "/api/v1/contractor_status?email=" + email + "&token=" + topgearApiToken
+                }, function(error, response, body) {
+                    if (error) {
+                        console.log("Enterprise user,  block wipro user call error", error);
+                    }
+
+                    const isContractor = _.get(JSON.parse(body), "isContractor");
+
+                    if (isContractor) {
+                        // stop further processing
+                        return callback(topgearBlockMessage, user, context);
+                    }
+
+                });
+            } catch (e) {
+                console.log(`Enterprise rule : error in calling wipro contractor api - ${e}`);
+                return callback(null, user, context);
+            }
+
             try {
                 request.get({
                     url: baseApiUrl + resourcePath
