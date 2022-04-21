@@ -62,9 +62,12 @@ function (user, context, callback) {
                     if (error) {
                         console.log("Enterprise user,  block wipro user call error", error);
                     }
-
-                    const isContractor = _.get(JSON.parse(body), "isContractor");
-
+                    let isContractor = false;
+                    try {
+                        isContractor = _.get(JSON.parse(body), "isContractor", false);
+                    } catch(e) {
+                        console.log("Enterprise user: contractor api response error - " + e);
+                    }
                     if (isContractor) {
                         // stop further processing
                         return callback(topgearBlockMessage, user, context);
